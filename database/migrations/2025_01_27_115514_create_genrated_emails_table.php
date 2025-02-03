@@ -13,11 +13,16 @@ return new class extends Migration {
         Schema::create('genrated_emails', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('recipient_email');
-            $table->string('cc');
-            $table->string('email_subject');
-            $table->string('description');
-            $table->string('content');
+            $table->string('recipient_email')->nullable();
+            $table->string('cc')->nullable();
+            $table->string('email_subject')->nullable();
+            $table->string('description')->nullable();
+            $table->string('content')->nullable();
+            $table->string('status')->nullable();
+            $table->string('ai_model_used')->nullable();
+            $table->dateTime('genrated_at')->nullable();
+            $table->dateTime('sent_at')->nullable();
+            $table->foreignId('prefence_id')->constrained('prefences')->cascadeOnDelete();
             $table->timestamps();
         });
     }
