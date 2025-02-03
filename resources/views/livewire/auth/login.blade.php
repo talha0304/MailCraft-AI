@@ -56,33 +56,24 @@ new #[Layout('layouts.auth')] class extends Component {
 };
 ?>
 <div class="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-    <!-- Notification Section -->
+    <!-- Flash Messages -->
     @if (session('notify'))
         <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 5000)" x-show="show"
-            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-10"
-            x-transition:enter-end="opacity-100 translate-x-0" x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100 translate-x-0" x-transition:leave-end="opacity-0 translate-x-10"
-            class="fixed top-4 right-4 z-50 min-w-[300px]">
-            <div
-                class="px-6 py-4 rounded-lg shadow-lg bg-white border-l-4 
-                 @if (session('notify.type') === 'success') border-green-500 text-green-600 @endif
-                 @if (session('notify.type') === 'error') border-red-500 text-red-600 @endif">
+             x-transition:enter="transition ease-out duration-300" 
+             x-transition:leave="transition ease-in duration-200"
+             class="fixed top-4 right-4 z-50 max-w-md w-full">
+            <div class="px-4 py-3 rounded-lg shadow-xl backdrop-blur-lg bg-gray-800/95 border border-gray-700
+                @if (session('notify.type') === 'success') text-emerald-400 @endif
+                @if (session('notify.type') === 'error') text-red-400 @endif">
                 <div class="flex items-center gap-3">
                     <div class="shrink-0">
                         @if (session('notify.type') === 'success')
-                            <!-- Checkmark Icon for Success -->
-                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                    clip-rule="evenodd" />
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
-                        @endif
-                        @if (session('notify.type') === 'error')
-                            <!-- Cross Icon for Error -->
-                            <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                    clip-rule="evenodd" />
+                        @else
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                             </svg>
                         @endif
                     </div>
