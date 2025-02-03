@@ -16,7 +16,8 @@ class User extends Authenticatable
         'password',
         'otp',
         'otp_created_at',
-        'is_verfied	'
+        'is_verfied	',
+        'company_id'
     ];
 
     public function genratedEmails()
@@ -24,5 +25,20 @@ class User extends Authenticatable
         $this->hasMany(GenratedEmail::class, 'user_id');
     }
 
+
+    public function securitylogs()
+    {
+        $this->hasMany(Securitylog::class, 'user_id');
+    }
+
+    public function emailTemplate()
+    {
+        $this->hasMany(Template::class, 'user_id');
+    }
+
+    public function company()
+    {
+        $this->hasMany(Company::class, 'user_id');
+    }
 
 }

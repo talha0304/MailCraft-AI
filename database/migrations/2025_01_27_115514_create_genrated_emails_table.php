@@ -23,10 +23,11 @@ return new class extends Migration {
             $table->dateTime('genrated_at')->nullable();
             $table->dateTime('sent_at')->nullable();
             $table->foreignId('prefence_id')->constrained('prefences')->cascadeOnDelete();
+            $table->foreignId('template_id')->constrained('templates')->cascadeOnDelete();
             $table->timestamps();
         });
     }
-
+   
     /**
      * Reverse the migrations.
      */
