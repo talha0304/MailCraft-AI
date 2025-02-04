@@ -69,7 +69,6 @@ new #[Layout('layouts.auth')] class extends Component {
     }
 }; ?>
 <!-- Flash Messages -->
-
 <div class="min-h-screen bg-gray-900 flex items-center justify-center p-4">
     <!-- Flash Messages -->
     @if (session('notify'))
