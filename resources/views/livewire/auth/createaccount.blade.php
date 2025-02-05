@@ -59,7 +59,7 @@ new #[Layout('layouts.auth')] class extends Component {
 
             if ($user) {
                 return redirect()
-                    ->route('email.verification', ['id' => $user->id])
+                    ->route('email.verification')
                     ->with('notify', [
                         'type' => 'success',
                         'message' => 'Account created successfully!',

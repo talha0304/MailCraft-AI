@@ -96,11 +96,7 @@ new #[Layout('layouts.auth')] class extends Component {
                 <div class="flex justify-center gap-4">
                     <a href="{{ route('create.account') }}" wire:navigate
                         class="px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors">
-                        Start Free Trial
-                    </a>
-                    <a href="{{ route('create.company.account') }}" wire:navigate
-                        class="px-8 py-4 border border-gray-700 hover:border-purple-500 rounded-lg font-semibold transition-colors">
-                        Business Solutions
+                        Start Free 
                     </a>
                 </div>
             </div>

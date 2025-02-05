@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('otp', 6)->nullable();
             $table->dateTime('otp_created_at')->nullable();
             $table->boolean('is_verfied')->default(false);
-           $table->unsignedBigInteger('company_id')->nullable();
             $table->timestamps();
         });
     }
