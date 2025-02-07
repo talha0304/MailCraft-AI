@@ -28,7 +28,7 @@ new #[Layout('layouts.auth')] class extends Component {
         try {
             $user = User::where('otp', '=', $this->inputOtp)->first();
 
-            if (now()->diffInMinutes($user->otp_created_at) > 10 || $user->otp !== $this->inputOtp) {
+            if (!$user || ($user && (now()->diffInMinutes(optional($user)->otp_created_at) > 10 || $user->otp !== $this->inputOtp))) {
                 return back()->with('notify', [
                     'type' => 'error',
                     'message' => 'OTP expired or invalid. Please request a new one.',
@@ -38,6 +38,7 @@ new #[Layout('layouts.auth')] class extends Component {
             $user->otp_created_at = null;
             $user->is_verfied = 1;
             $user->save();
+
             Auth::login($user);
 
             Security_log::create([
@@ -47,15 +48,18 @@ new #[Layout('layouts.auth')] class extends Component {
             ]);
 
             return redirect()
-                ->route('email.gen')
+                ->route('dashboard')
                 ->with('notify', [
                     'type' => 'success',
-                    'message' => 'OTP verified successfully. Login Succecfully ',
+                    'message' => 'OTP verified successfully. Login Successfully.',
                 ]);
         } catch (Exception $ex) {
-            Log::error('Error ver OTP verifing ' . $ex->getMessage(), [
-                'user' => $user->otp_created_at,
+            Log::error('Error verifying OTP: ' . $ex->getMessage(), [
                 'exception' => $ex,
+            ]);
+            return back()->with('notify', [
+                'type' => 'error',
+                'message' => 'An error occurred while verifying OTP. Please try again.',
             ]);
         }
     }

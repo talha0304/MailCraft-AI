@@ -2,24 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Template extends Model
+class language extends Model
 {
-    use HasFactory;
     protected $fillable = [
-       'name',
-       'content',
-       'category',
-       'user_id'
+        'user_id',
+        'language'
     ];
-
 
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-
+    public function genEmail(){
+        return $this->hasMany(GenratedEmail::class,'language_id');
+    }
 }

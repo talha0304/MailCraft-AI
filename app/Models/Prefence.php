@@ -16,7 +16,7 @@ class Prefence extends Model
 
     public function genratedEmail()
     {
-        $this->belongsTo(GenratedEmail::class,'prefence_id'); 
+        return $this->belongsTo(GenratedEmail::class,'prefence_id'); 
     }
 
 

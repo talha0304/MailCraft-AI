@@ -40,7 +40,7 @@ new #[Layout('layouts.auth')] class extends Component {
                     'ip_address' => request()->ip(),
                 ]);
                 return redirect()
-                    ->route('email.gen')
+                    ->route('dashboard')
                     ->with('notify', [
                         'type' => 'success',
                         'message' => 'Login successful.',
@@ -173,7 +173,7 @@ new #[Layout('layouts.auth')] class extends Component {
 
                 <!-- Forgot Password Link -->
                 <div class="flex items-center justify-end">
-                    <a href="#"
+                    <a href="{{ route('forget.password') }}" wire:navigate
                         class="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
                         Forgot your password?
                     </a>

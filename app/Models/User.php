@@ -22,23 +22,27 @@ class User extends Authenticatable
 
     public function genratedEmails()
     {
-        $this->hasMany(GenratedEmail::class, 'user_id');
+        return $this->hasMany(GenratedEmail::class, 'user_id');
     }
 
 
     public function securitylogs()
     {
-        $this->hasMany(Securitylog::class, 'user_id');
+        return $this->hasMany(Security_log::class, 'user_id');
     }
 
     public function emailTemplate()
     {
-        $this->hasMany(Template::class, 'user_id');
+        return $this->hasMany(Template::class, 'user_id');
     }
 
     public function company()
     {
-        $this->hasMany(Company::class, 'user_id');
+        return $this->hasMany(Company::class, 'user_id');
+    }
+
+    public function languages (){
+        return $this->hasMany(Language::class,'user_id');
     }
 
 }

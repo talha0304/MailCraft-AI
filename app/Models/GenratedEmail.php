@@ -25,12 +25,17 @@ class GenratedEmail extends Model
 
     public function user()
     {
-        $this->belongsTo(User::class, 'user_id');
+        return  $this->belongsTo(User::class, 'user_id');
     }
 
     public function Prefence()
     {
-        $this->hasOne(Prefence::class, 'prefence_id');
+        return  $this->hasOne(Prefence::class, 'prefence_id');
+    }
+
+    public function language()
+    {
+        return $this->belongsTo(Language::class, 'language_id');
     }
 
 }
