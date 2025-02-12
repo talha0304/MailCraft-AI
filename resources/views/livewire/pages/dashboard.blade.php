@@ -10,11 +10,8 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $this->languageCount = Language::where('user_id', '=', request()->user()->id)->count();
     }
-
-  
 };
 ?>
-
 <div class="gradient-bg text-gray-100 min-h-screen p-8">
     <style>
         .gradient-bg {
@@ -37,12 +34,6 @@ new #[Layout('layouts.app')] class extends Component {
             padding: 1.5rem;
         }
     </style>
-
-    <!-- Add Font Awesome CSS for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Add Chart.js for graphs -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Flash Messages -->
     @if (session('notify'))
@@ -88,39 +79,46 @@ new #[Layout('layouts.app')] class extends Component {
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-gray-800 rounded-xl p-6 card-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400">Total Emails Sent</p>
-                        <p class="text-2xl font-bold">1,234</p>
-                    </div>
-                    <div class="bg-blue-500 rounded-full p-3">
-                        <i class="fas fa-envelope-open-text text-white fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gray-800 rounded-xl p-6 card-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400">Saved Templates</p>
-                        <p class="text-2xl font-bold">56</p>
-                    </div>
-                    <div class="bg-green-500 rounded-full p-3">
-                        <i class="fas fa-file-alt text-white fa-lg"></i>
+            <a href="" wire:navigate>
+                <div class="bg-gray-800 rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400">Total Emails Sent</p>
+                            <p class="text-2xl font-bold">1,234</p>
+                        </div>
+                        <div class="bg-blue-500 rounded-full p-3">
+                            <i class="fas fa-envelope-open-text text-white fa-lg"></i>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="bg-gray-800 rounded-xl p-6 card-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400">Active Languages</p>
-                        <p class="text-2xl font-bold">{{ $languageCount }}</p>
-                    </div>
-                    <div class="bg-purple-500 rounded-full p-3">
-                        <i class="fas fa-language text-white fa-lg"></i>
+            </a>
+            <a href="" wire:navigate>
+                <div class="bg-gray-800 rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400">Saved Templates</p>
+                            <p class="text-2xl font-bold">56</p>
+                        </div>
+                        <div class="bg-green-500 rounded-full p-3">
+                            <i class="fas fa-file-alt text-white fa-lg"></i>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
+            <a href="{{ route('show.lang') }}" wire:navigate>
+                <div class="bg-gray-800 rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400">Active Languages</p>
+                            <p class="text-2xl font-bold">{{ $languageCount }}</p>
+                        </div>
+                        <div class="bg-purple-500 rounded-full p-3">
+                            <i class="fas fa-language text-white fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+           <a href="" wire:navigate>
             <div class="bg-gray-800 rounded-xl p-6 card-hover">
                 <div class="flex items-center justify-between">
                     <div>
@@ -132,6 +130,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                 </div>
             </div>
+           </a>
         </div>
 
         <!-- Email Sent Graph -->
@@ -145,7 +144,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     <!-- Chart.js Script -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('emailChart').getContext('2d');
             const emailChart = new Chart(ctx, {
                 type: 'line',

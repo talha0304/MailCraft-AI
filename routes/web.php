@@ -15,6 +15,7 @@ Volt::route('resetpassword', 'pages.forgetpassword')->name('forget.password');
 Route::middleware('auth')->group(function () {
     Volt::route('dashboard', 'pages.dashboard')->name('dashboard');
     Volt::route('home', 'pages.emailgen')->name('email.gen');
+    Volt::route('languages/add', 'languages.add')->name('add.lang');
+    Volt::route('languages/show', 'languages.show')->name('show.lang');
 });
 
-// gar ja kay dashboard ko modify karna hy and baki featurs add karany 
