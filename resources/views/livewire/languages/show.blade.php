@@ -8,7 +8,23 @@ new #[Layout('layouts.app')] class extends Component {
     public $userLanguages;
     public function mount()
     {
-        $this->userLanguages = Language::where('user_id', '=', request()->user()->id)->get();
+        $this->userLanguages = Language::where('user_id', '=', request()->user()->id)
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
+    public function deleteLang($id)
+    {
+        try {
+            Language::where('id', $id)->delete();
+            $this->userLanguages = Language::where('user_id', '=', request()->user()->id)->orderBy('id', 'desc')->get();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return back()->with('notify', [
+                'type' => 'error',
+                'message' => 'Something went wrong. Please try again later.',
+            ]);
+        }
     }
 }; ?>
 <div class="min-h-screen flex flex-col bg-gray-900">
@@ -45,17 +61,37 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     @endif
     <!-- Main Content -->
-    <div class="flex-1 p-6 mt-20">
+    <div class="flex-1 p-6 mt-36">
         <!-- Add Language Button -->
-        <div class="mb-8 flex justify-start">
-            <button
-                class="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl">
+        <div
+            class="mb-8 flex items-center justify-between px-4 py-6 bg-gray-800/50 backdrop-blur-md rounded-2xl shadow-lg">
+            <!-- Add Language Button -->
+            <button wire:navigate href="{{ route('add.lang') }}"
+                class="flex items-center space-x-2 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
-                <a href="{{ route('add.lang') }}">Add Language</a>
+                <span>Add Language</span>
+            </button>
+
+            <!-- Languages Heading -->
+            <h2
+                class="text-4xl font-bold text-center text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Languages
+            </h2>
+
+            <!-- Dashboard Button -->
+            <button onclick="window.location.href='{{ route('dashboard') }}'"
+                class="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span>Dashboard</span>
             </button>
         </div>
+
 
         <!-- Language List Container -->
         <div class="space-y-6">
@@ -72,7 +108,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <div
                             class="flex items-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <!-- Edit Link -->
-                            <a href="/edit"
+                            <button onclick="window.location.href='{{ route('update.lang', $language->id) }}'"
                                 class="p-2 hover:bg-green-900/20 rounded-xl transition-all duration-200 transform hover:scale-110"
                                 title="Edit">
                                 <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor"
@@ -80,10 +116,10 @@ new #[Layout('layouts.app')] class extends Component {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
-                            </a>
+                            </button>
 
                             <!-- Delete Link -->
-                            <a href="/delete"
+                            <button wire:click="deleteLang({{ $language->id }})"
                                 class="p-2 hover:bg-red-900/20 rounded-xl transition-all duration-200 transform hover:scale-110"
                                 title="Delete">
                                 <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor"
@@ -91,7 +127,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>

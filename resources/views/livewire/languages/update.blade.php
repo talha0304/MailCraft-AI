@@ -5,20 +5,38 @@ use Livewire\Attributes\Layout;
 use App\Models\language;
 
 new #[Layout('layouts.app')] class extends Component {
+    public $languageId;
     public $language;
+    public $selectedLanguage;
 
-    public function storelanguage()
+    public function mount($id)
+    {
+        $this->languageId = $id;
+        $this->selectedLanguage = Language::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if (!$this->selectedLanguage) {
+            return redirect()->route('show.lang')->with('notify', [
+                'type' => 'error',
+                'message' => 'Language not found!',
+            ]);
+        }
+        $this->language = $this->selectedLanguage->language;
+    }
+    public function updateLang()
     {
         try {
-            language::create([
-                'user_id' => request()->user()->id,
-                'language' => $this->language,
-            ]);
+            language::where('id', $this->languageId)
+                ->where('user_id', auth()->user()->id)
+                ->update([
+                    'language' => $this->language,
+                ]);
             return redirect()
                 ->route('show.lang')
                 ->with('notify', [
                     'type' => 'success',
-                    'message' => 'Language Created Succesfully ',
+                    'message' => 'Language Updated Succesfully ',
                 ]);
         } catch (Exception $ex) {
             Log::error($ex);
@@ -66,29 +84,32 @@ new #[Layout('layouts.app')] class extends Component {
     <!-- Main Content -->
     <div class="w-full max-w-2xl mx-auto p-8 bg-gray-800 rounded-xl shadow-2xl">
         <!-- Heading -->
-        <h2 class="text-3xl font-bold text-center mb-8 text-white">Manage Languages</h2>
-    
+        <h2 class="text-3xl font-bold text-center mb-8 text-white">Update Languages</h2>
+
+
         <!-- Back Button -->
-        <button wire:navigate href="{{ route('show.lang')}}"
+        <button wire:navigate href="{{ route('show.lang') }}"
             class="flex items-center space-x-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-2 rounded-lg mb-6 transition-all duration-300 transform hover:scale-105 active:scale-95">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span>Back</span>
         </button>
-    
+
+
         <!-- Modern Add Language Form -->
-        <form class="flex flex-col space-y-6" wire:submit.prevent="storelanguage">
+        <!-- Modern Add Language Form -->
+        <form class="flex flex-col space-y-6" wire:submit.prevent="updateLang()">
             <!-- Input Field -->
             <input type="text" name="language" placeholder="Enter new language..." wire:model="language"
                 class="bg-gray-700 text-white rounded-lg px-5 py-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400 transition-all duration-200"
                 required />
-    
+
             <!-- Submit Button -->
             <button type="submit"
                 class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
                 <i class="fas fa-plus"></i>
-                <span>Add Language</span>
+                <span>Update Language</span>
             </button>
         </form>
     </div>
