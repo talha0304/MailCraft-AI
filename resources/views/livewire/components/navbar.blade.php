@@ -12,8 +12,8 @@ new class extends Component {
     }
 }; ?>
 
-<div>
-    <nav class="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 shadow-xl">
+<div x-data="{ isOpen: false }">
+    <nav class="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 shadow-xl relative">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Logo with modern gradient -->
@@ -27,7 +27,7 @@ new class extends Component {
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center space-x-6">
                     <!-- User Dropdown -->
-                    <div class="relative group" x-data="{ open: false }" @mouseover="open = true" @mouseleave="open = false">
+                    <div class="relative group z-50" x-data="{ open: false }" @mouseover="open = true" @mouseleave="open = false">
                         <button class="flex items-center space-x-2 focus:outline-none">
                             <div class="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
                                 <i class="fas fa-user text-white text-sm"></i>
@@ -35,7 +35,7 @@ new class extends Component {
                         </button>
                         
                         <!-- Dropdown Menu -->
-                        <div class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 transform origin-top transition-all duration-200 scale-95 group-hover:scale-100 opacity-0 group-hover:opacity-100"
+                        <div class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 transform origin-top transition-all duration-200 scale-95 group-hover:scale-100 opacity-0 group-hover:opacity-100 z-50"
                             x-show="open"
                             x-cloak
                             style="display: none;">
@@ -62,7 +62,9 @@ new class extends Component {
         </div>
 
         <!-- Mobile Dropdown Menu -->
-        <div class="md:hidden bg-gray-800/95 backdrop-blur-sm" x-show="isOpen" x-cloak style="display: none;">
+        <div class="md:hidden bg-gray-800/95 backdrop-blur-sm max-h-screen overflow-hidden transition-all ease-in-out duration-300"
+             x-show="isOpen"
+             x-cloak>
             <div class="px-4 py-3 space-y-2">
                 <div class="pt-4 border-t border-gray-700">
                     <a href="#" class="block px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg">

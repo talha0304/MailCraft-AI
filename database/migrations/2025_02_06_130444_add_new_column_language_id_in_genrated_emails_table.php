@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('genrated_email', function (Blueprint $table) {
+        Schema::table('genrated_emails', function (Blueprint $table) {
             $table->unsignedBigInteger('language_id')->nullable();
         });
     }
@@ -20,7 +20,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('genrated_email', function (Blueprint $table) {
+        Schema::table('genrated_emails', function (Blueprint $table) {
             $table->dropColumn('language_id');
         });
     }
