@@ -178,7 +178,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div class="h-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full"></div>
                 </div>
             </div>
-            <a href="{{ route('show.lang') }}" wire:wire:navigate>
+            <a href="{{ route('show.lang') }}"wire:navigate>
                 <div class="cyber-card p-6 cyber-glow">
                     <div class="flex items-center justify-between holographic-effect">
                         <div class="z-10">
@@ -194,20 +194,22 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                 </div>
             </a>
-            <div class="cyber-card p-6 cyber-glow">
-                <div class="flex items-center justify-between holographic-effect">
-                    <div class="z-10">
-                        <p class="text-gray-400 mb-1">Generated Template</p>
-                        <p class="text-3xl font-bold neon-text">{{ $GeratedTemplateCounts }}</p>
+            <a href="{{ route('show.template') }}" wire:navigate>
+                <div class="cyber-card p-6 cyber-glow">
+                    <div class="flex items-center justify-between holographic-effect">
+                        <div class="z-10">
+                            <p class="text-gray-400 mb-1">Generated Template</p>
+                            <p class="text-3xl font-bold neon-text">{{ $GeratedTemplateCounts }}</p>
+                        </div>
+                        <div class="stats-icon rounded-full p-3 transform hover:rotate-12 transition-transform">
+                            <i class="fas fa-clipboard text-white text-2xl"></i>
+                        </div>
                     </div>
-                    <div class="stats-icon rounded-full p-3 transform hover:rotate-12 transition-transform">
-                        <i class="fas fa-clipboard text-white text-2xl"></i>
+                    <div class="mt-4">
+                        <div class="h-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full"></div>
                     </div>
                 </div>
-                <div class="mt-4">
-                    <div class="h-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full"></div>
-                </div>
-            </div>
+            </a>
             <a href="{{ route('email.gen') }}">
                 <div class="cyber-card p-6 cyber-glow">
                     <div class="flex items-center justify-between holographic-effect">
