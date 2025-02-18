@@ -12,7 +12,8 @@ class Template extends Model
        'name',
        'content',
        'category',
-       'user_id'
+       'user_id',
+       'language'
     ];
 
 

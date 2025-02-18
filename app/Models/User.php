@@ -5,6 +5,11 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\language;
+use App\Models\Security_log;
+use App\Models\GenratedEmail;
+use App\Models\Template;
+use App\Models\Company;
 
 class User extends Authenticatable
 {
@@ -31,7 +36,7 @@ class User extends Authenticatable
         return $this->hasMany(Security_log::class, 'user_id');
     }
 
-    public function emailTemplate()
+    public function emailTemplates()
     {
         return $this->hasMany(Template::class, 'user_id');
     }

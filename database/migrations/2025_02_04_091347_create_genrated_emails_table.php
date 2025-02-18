@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->string('cc')->nullable();
             $table->string('email_subject')->nullable();
             $table->string('description')->nullable();
-            $table->string('content')->nullable();
+            $table->text('content')->nullable();
             $table->string('status')->nullable();
             $table->string('ai_model_used')->nullable();
             $table->dateTime('genrated_at')->nullable();
