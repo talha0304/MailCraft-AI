@@ -20,5 +20,6 @@ Route::middleware('auth')->group(function () {
     Volt::route('languages', 'pages.languages.show')->name('show.lang');
     Volt::route('template', 'pages.template.show')->name('show.template');
     Volt::route('genrate/template', 'pages.template.gentemplate')->name('gen.template');
+    Volt::route('template/view/{id}', 'pages.template.view')->name('preview.template');
 });
 

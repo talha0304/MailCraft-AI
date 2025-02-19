@@ -16,7 +16,6 @@ new #[Layout('layouts.app')] class extends Component {
     public $isGenerating = false;
     public $userLaguage;
 
-
     public function mount()
     {
         $this->userLaguage = auth()->user()->languages()->get();
@@ -24,7 +23,6 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function generateEmail(GroqApiService $apiService)
     {
-       
         $this->validate([
             'subject' => 'required|string|max:255',
             'prompt' => 'required|string',
@@ -50,27 +48,38 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function saveTemplate()
     {
-        $this->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'required|string|in:marketing,onboarding,newsletter,transactional',
-            'content' => 'required|string',
-            'language' => 'required|string',
-        ]);
-
-        // Save to database
-        auth()
-            ->user()
-            ->emailTemplates()
-            ->create([
-                'name' => $this->name,
-                'category' => $this->category,
-                'content' => $this->content,
-                'language' => $this->language,
-                'user_id' => auth()->user()->id,
+        try {
+            $this->validate([
+                'name' => 'required|string|max:255',
+                'category' => 'required|string|in:marketing,onboarding,newsletter,transactional',
+                'content' => 'required|string',
+                'language' => 'required|string',
             ]);
-
-        $this->reset();
-        session()->flash('notify', 'Template saved successfully!');
+            // Save to database
+            auth()
+                ->user()
+                ->emailTemplates()
+                ->create([
+                    'name' => $this->name,
+                    'category' => $this->category,
+                    'content' => $this->content,
+                    'language' => $this->language,
+                    'user_id' => auth()->user()->id,
+                ]);
+            $this->reset();
+            return redirect()
+                ->route('show.template')
+                ->with('notify', [
+                    'type' => 'success',
+                    'message' => 'Template created successful',
+                ]);
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return back()->with('notify', [
+                'type' => 'error',
+                'message' => 'Something went wrong. Please try again later.',
+            ]);
+        }
     }
 }; ?>
 
@@ -174,7 +183,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 class="w-full px-5 py-3 bg-gray-900/50 border border-white/10 rounded-xl text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none transition-all duration-300">
                                 <option value="" disabled selected>Select Language</option>
                                 @foreach ($userLaguage as $lang)
-                                    <option value="{{$lang->language}}">{{ $lang->language }}</option>
+                                    <option value="{{ $lang->language }}">{{ $lang->language }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -248,33 +257,6 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                 </div>
             </form>
-        </div>
-        <!-- Preview Section -->
-        <div x-show="previewTemplate" x-transition
-            class="w-full bg-gray-800/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 mb-8">
-            <div class="p-6 space-y-6">
-                <div class="flex items-center justify-between pb-4 border-b border-white/10">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-cyan-900/30 border border-cyan-400/20 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <h3
-                            class="text-xl font-semibold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                            Template Preview
-                        </h3>
-                    </div>
-                </div>
-                <div class="prose prose-invert max-w-none">
-                    <div class="whitespace-pre-line leading-relaxed text-gray-300 font-light">
-                        {{ $content }}
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
