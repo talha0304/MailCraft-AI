@@ -156,5 +156,3 @@ new #[Layout('layouts.app')] class extends Component {
         }
     </style>
 </div>
-
-// complete the Dashboard
