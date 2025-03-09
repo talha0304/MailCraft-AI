@@ -42,7 +42,7 @@ new #[Layout('layouts.app')] class extends Component {
                 scrollbar-thin 
                 scrollbar-track-transparent 
                 scrollbar-thumb-gray-700 
-                hover:scrollbar-thumb-cyan-500/80
+                hover:scrollbar-thumb-cyan-500/80 
                 scrollbar-thumb-rounded-full
                 scrollbar-track-rounded-full
                 pr-3">

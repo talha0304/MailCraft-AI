@@ -144,13 +144,25 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                 <!-- Edit Button -->
                                 <button
-                                    class="p-1.5 hover:bg-gray-700/50 rounded-lg transition-all duration-200 hover:scale-110">
-                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536l-7.072 7.072-4.242.707.707-4.242 7.072-7.072zM12 15h.01" />
-                                    </svg>
-                                </button>
+                                wire:navigate
+                                href="{{ route('update.template', ['id' => $template->id]) }}"
+                                class="p-1.5 hover:bg-gray-700/50 rounded-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:bg-gray-700/50 flex items-center justify-center"
+                                aria-label="Edit template"
+                            >
+                                <svg 
+                                    class="w-5 h-5 text-gray-400 hover:text-cyan-400 transition-colors duration-200" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path 
+                                        stroke-linecap="round" 
+                                        stroke-linejoin="round" 
+                                        stroke-width="2"
+                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536l-7.072 7.072-4.242.707.707-4.242 7.072-7.072zM12 15h.01"
+                                    />
+                                </svg>
+                            </button>
                                 <!-- View Button -->
                                 <button wire:navigate href="{{ route('preview.template', ['id' => $template->id]) }}"
                                     class="p-1.5 hover:bg-gray-700/50 rounded-lg transition-all duration-200 hover:scale-110">

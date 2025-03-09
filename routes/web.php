@@ -21,5 +21,6 @@ Route::middleware('auth')->group(function () {
     Volt::route('template', 'pages.template.show')->name('show.template');
     Volt::route('genrate/template', 'pages.template.gentemplate')->name('gen.template');
     Volt::route('template/view/{id}', 'pages.template.view')->name('preview.template');
+    Volt::route('template/update/{id}', 'pages.template.update')->name('update.template');
 });
 
