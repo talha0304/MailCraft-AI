@@ -15,6 +15,7 @@ Volt::route('resetpassword', 'pages.forgetpassword')->name('forget.password');
 Route::middleware('auth')->group(function () {
     Volt::route('dashboard', 'pages.dashboard')->name('dashboard');
     Volt::route('home', 'pages.email.emailgen')->name('email.gen');
+    Volt::route('genrate/email/{id}', 'pages.email.emailgenbytemp')->name('gen.temp.email');
     Volt::route('languages/add', 'pages.languages.add')->name('add.lang');
     Volt::route('languages/update/{id}', 'pages.languages.update')->name('update.lang');
     Volt::route('languages', 'pages.languages.show')->name('show.lang');

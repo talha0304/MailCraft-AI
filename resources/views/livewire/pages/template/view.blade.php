@@ -51,12 +51,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div class="group relative p-6 rounded-xl bg-gray-700/10 border border-gray-700/50 transition-all duration-300 hover:border-cyan-400/30">
                         <!-- Action Buttons -->
                         <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button wire:click="copyContent" class="p-2 hover:bg-gray-700/30 rounded-lg" title="Copy content">
-                                <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                </svg>
-                            </button>
-                            <button wire:click="generateEmail" class="p-2 hover:bg-gray-700/30 rounded-lg" title="Generate email">
+                            <button wire:navigate href="{{ route('gen.temp.email', ['id' => $template->id]) }}" class="p-2 hover:bg-gray-700/30 rounded-lg" title="Generate email">
                                 <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                 </svg>
