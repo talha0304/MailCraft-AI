@@ -55,7 +55,7 @@ Contributions, feedback, and suggestions are welcome! Feel free to fork the repo
 
 ## 🔗 Connect
 If you have any ideas, feature requests, or improvements, let's collaborate! 🚀  
-GitHub Repo: [MailCraft-AI-Agent](https://github.com/talha0304/MailCraft-AI-Agent)  
+GitHub Repo:https://github.com/talha0304/MailCraft-AI
 
 ## 🏆 License
 This project is open-source and available under the **MIT License**.
