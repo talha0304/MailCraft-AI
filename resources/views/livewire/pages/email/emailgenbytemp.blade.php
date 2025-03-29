@@ -1,0 +1,456 @@
+<?php
+use Livewire\Volt\Component;
+use App\Services\GroqApiService;
+use Livewire\Attributes\Layout;
+use App\Mail\SendMail;
+use App\Models\Template;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Session;
+
+new #[Layout('layouts.app')] class extends Component {
+    public string $email = '';
+    public string $cc = '';
+    public string $subject = '';
+    public string $content = '';
+    public string $generatedEmail = '';
+    public string $editableEmail = '';
+    public string $command = '';
+    public string $selectedTemplate = '';
+    public string $emailTone = 'professional';
+    public bool $isGenerating = false;
+    public bool $isModifying = false;
+
+    public function with()
+    {
+        return [
+            'templates' => Template::all(),
+            'tones' => ['professional', 'casual', 'sales', 'technical']
+        ];
+    }
+
+    public function updatedSelectedTemplate($value)
+    {
+        if ($value) {
+            $template = Template::find($value);
+            if ($template) {
+                $this->parseTemplateContent($template->content);
+            }
+        }
+    }
+
+    private function parseTemplateContent($content)
+    {
+        // Extract subject and body from template
+        $subject = '';
+        $body = $content;
+        
+        if (preg_match('/^Subject:\s*(.+)$/im', $content, $matches)) {
+            $subject = trim($matches[1]);
+            $body = preg_replace('/^Subject:\s*.+$/im', '', $content);
+        }
+        
+        $this->subject = $subject;
+        $this->content = trim(str_replace(["\r\n", "\r"], "\n", $body));
+    }
+
+    public function generateEmail(GroqApiService $apiService)
+    {
+        $this->validate([
+            'email' => 'required|email',
+            'cc' => 'nullable|string|max:255',
+            'subject' => 'required|string|max:255',
+            'content' => 'required|string',
+            'selectedTemplate' => 'required|exists:templates,id',
+            'emailTone' => 'required|in:professional,casual,sales,technical'
+        ]);
+
+        $this->isGenerating = true;
+
+        try {
+            $template = Template::find($this->selectedTemplate);
+            $prompt = "Generate a {$this->emailTone} tone email using this template structure:\n";
+            $prompt .= "--- TEMPLATE START ---\n";
+            $prompt .= $template->content . "\n";
+            $prompt .= "--- TEMPLATE END ---\n\n";
+            $prompt .= "Additional instructions:\n";
+            $prompt .= "- Subject: {$this->subject}\n";
+            $prompt .= "- Maintain proper email formatting\n";
+            $prompt .= "- Use appropriate greetings and closings\n";
+            $prompt .= "- Keep paragraphs concise";
+
+            $response = $apiService->generateEmail($prompt);
+
+            if (isset($response['error'])) {
+                $this->addError('api', 'API Error: ' . $response['message']);
+            } else {
+                $this->generatedEmail = $response;
+                $this->editableEmail = $response;
+                $this->dispatch('email-generated');
+            }
+        } catch (\Exception $e) {
+            $this->addError('api', 'Error: ' . $e->getMessage());
+        } finally {
+            $this->isGenerating = false;
+        }
+    }
+
+    public function modifyEmail(GroqApiService $apiService)
+    {
+        $this->validate(['command' => 'required|string|max:500']);
+        $this->isModifying = true;
+
+        try {
+            $prompt = "Modify this email according to: {$this->command}\n\nCurrent email:\n{$this->editableEmail}\n\nProvide only the modified email without explanations.";
+            $response = $apiService->generateEmail($prompt);
+
+            if (isset($response['error'])) {
+                $this->addError('api', 'Modification failed: ' . $response['message']);
+            } else {
+                $this->editableEmail = $response;
+                $this->command = '';
+                $this->dispatch('email-modified');
+            }
+        } finally {
+            $this->isModifying = false;
+        }
+    }
+
+    public function sendMail()
+    {
+        $this->validate([
+            'email' => 'required|email',
+            'cc' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    $emails = array_map('trim', explode(',', $value));
+                    foreach ($emails as $email) {
+                        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                            $fail('One or more CC emails are invalid');
+                        }
+                    }
+                },
+            ],
+            'subject' => 'required|string|max:255',
+            'editableEmail' => 'required|string',
+        ]);
+
+        try {
+            $mail = Mail::to($this->email)
+                ->when(!empty($this->cc), function ($message) {
+                    $ccEmails = array_map('trim', explode(',', $this->cc));
+                    $message->cc($ccEmails);
+                })
+                ->send(new SendMail(subject: $this->subject, content: $this->editableEmail));
+
+            // Flash success message
+            Session::flash('notify', [
+                'type' => 'success',
+                'message' => 'Email sent successfully!',
+            ]);
+
+            $this->resetExcept(['email', 'cc', 'subject', 'editableEmail']);
+        } catch (\Throwable $th) {
+            // Flash error message
+            Session::flash('notify', [
+                'type' => 'error',
+                'message' => 'Failed to send email: ' . $th->getMessage(),
+            ]);
+        }
+    }
+};
+?>
+<div>
+    <!-- Flash Messages -->
+    @if (session('notify'))
+    <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 5000)" x-show="show"
+         x-transition:enter="transition ease-out duration-300" x-transition:leave="transition ease-in duration-200"
+         class="fixed top-4 right-4 z-50 max-w-md w-full">
+        <div class="px-4 py-3 rounded-lg shadow-xl backdrop-blur-lg bg-gray-800/95 border border-gray-700
+            @if (session('notify.type') === 'success') text-emerald-400 @endif
+            @if (session('notify.type') === 'error') text-red-400 @endif">
+            <div class="flex items-center gap-3">
+                <div class="shrink-0">
+                    @if (session('notify.type') === 'success')
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                    @else
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    @endif
+                </div>
+                <div class="text-sm font-medium">
+                    {{ session('notify.message') }}
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
+    <div x-data="{ showInputForm: true }"
+        class="min-h-screen bg-gray-900 flex flex-col items-center py-8 text-gray-100 relative overflow-hidden">
+        
+        <!-- Background effects -->
+        <div class="absolute inset-0 bg-gradient-to-br from-cyan-900/20 to-purple-900/20 backdrop-blur-3xl"></div>
+
+        <div class="w-full max-w-2xl px-4 relative z-10">
+            <!-- Header -->
+            <div class="text-center mb-12 space-y-4">
+                <h1 class="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent animate-gradient">
+                    MailCraft
+                </h1>
+                <p class="mt-3 text-gray-400 font-light">AI-Powered Email Composition</p>
+            </div>
+
+            <!-- Toggle Button -->
+            <div class="flex justify-center mb-8">
+                <button @click="showInputForm = !showInputForm"
+                    class="bg-gradient-to-r from-cyan-600/60 to-purple-600/60 backdrop-blur-lg hover:from-cyan-500/50 hover:to-purple-500/50 
+                           text-white px-8 py-3 rounded-2xl font-medium transition-all duration-300 flex items-center gap-3
+                           border border-white/10 hover:border-white/20 shadow-[0_0_30px_rgba(112,144,176,0.1)]">
+                    <span x-text="showInputForm ? 'Collapse Interface' : 'Expand Interface'"></span>
+                    <svg :class="showInputForm ? 'rotate-180' : ''" class="w-5 h-5 text-purple-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Main Form Interface -->
+            <div x-show="showInputForm" x-transition.opacity
+                class="w-full bg-gray-800/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 mb-8">
+                <form wire:submit.prevent="generateEmail" class="space-y-6 p-6">
+                    <!-- Recipient Fields -->
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="relative group">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-600/20 to-purple-600/20 rounded-xl blur opacity-30 transition-all duration-300"></div>
+                            <div class="relative space-y-4">
+                                <div class="relative">
+                                    <input type="email" wire:model="email"
+                                        class="w-full px-5 py-3.5 bg-gray-900/50 border border-white/10 rounded-xl text-gray-100
+                                                focus:ring-2 focus:ring-cyan-500 focus:border-transparent peer
+                                                transition-all duration-300 placeholder-transparent"
+                                        placeholder="Recipient Email Address" required>
+                                    <label class="absolute left-4 -top-2.5 px-1 bg-gray-900/40 text-sm text-cyan-400
+                                                transition-all duration-300 peer-placeholder-shown:text-base 
+                                                peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 
+                                                peer-focus:-top-2.5 peer-focus:text-sm">
+                                        Recipient Email
+                                    </label>
+                                </div>
+                                <div class="relative">
+                                    <input type="text" wire:model="cc"
+                                        class="w-full px-5 py-3.5 bg-gray-900/50 border border-white/10 rounded-xl text-gray-100
+                                                focus:ring-2 focus:ring-purple-500 focus:border-transparent peer
+                                                transition-all duration-300 placeholder-transparent"
+                                        placeholder="CC Addresses">
+                                    <label class="absolute left-4 -top-2.5 px-1 bg-gray-900/40 text-sm text-purple-400
+                                                transition-all duration-300 peer-placeholder-shown:text-base 
+                                                peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 
+                                                peer-focus:-top-2.5 peer-focus:text-sm">
+                                        CC (comma separated)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template & Tone Selection -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Template Card -->
+                        <div class="relative group">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-600/20 to-purple-600/20 rounded-xl blur opacity-30 transition-all duration-300"></div>
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-cyan-400 mb-2 ml-1">Template</label>
+                                <select wire:model="selectedTemplate" 
+                                    class="w-full px-4 py-3 bg-gray-900/40 border border-white/10 rounded-xl text-gray-100
+                                           focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none
+                                           transition-all duration-300 shadow-lg">
+                                    <option value="" disabled selected>Choose Template...</option>
+                                    @foreach ($templates as $template)
+                                        <option value="{{ $template->id }}" class="bg-gray-800">
+                                            {{ $template->name }} ({{ $template->category }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tone Card -->
+                        <div class="relative group">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-purple-600/20 to-cyan-600/20 rounded-xl blur opacity-30 transition-all duration-300"></div>
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-purple-400 mb-2 ml-1">Tone</label>
+                                <select wire:model="emailTone" 
+                                    class="w-full px-4 py-3 bg-gray-900/40 border border-white/10 rounded-xl text-gray-100
+                                           focus:ring-2 focus:ring-cyan-500 focus:border-transparent appearance-none
+                                           transition-all duration-300 shadow-lg">
+                                    @foreach ($tones as $tone)
+                                        <option value="{{ $tone }}" class="bg-gray-800">
+                                            {{ ucfirst($tone) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subject & Content -->
+                    <div class="space-y-4">
+                        <div class="relative group">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-600/20 to-purple-600/20 rounded-xl blur opacity-30 transition-all duration-300"></div>
+                            <div class="relative">
+                                <input type="text" wire:model="subject"
+                                    class="w-full px-5 py-3.5 bg-gray-900/50 border border-white/10 rounded-xl text-gray-100
+                                            focus:ring-2 focus:ring-purple-500 focus:border-transparent peer
+                                            transition-all duration-300 placeholder-transparent"
+                                    placeholder="Email Subject" required>
+                                <label class="absolute left-4 -top-2.5 px-1 bg-gray-900/40 text-sm text-cyan-400
+                                            transition-all duration-300 peer-placeholder-shown:text-base 
+                                            peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 
+                                            peer-focus:-top-2.5 peer-focus:text-sm">
+                                    Email Subject
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="relative group">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-purple-600/20 to-cyan-600/20 rounded-xl blur opacity-30 transition-all duration-300"></div>
+                            <div class="relative">
+                                <textarea wire:model="content" rows="6"
+                                    class="w-full px-5 py-3.5 bg-gray-900/50 border border-white/10 rounded-xl text-gray-100
+                                            focus:ring-2 focus:ring-cyan-500 focus:border-transparent peer
+                                            transition-all duration-300 placeholder-transparent resize-none"
+                                    placeholder="Email Content" required></textarea>
+                                <label class="absolute left-4 -top-2.5 px-1 bg-gray-900/40 text-sm text-purple-400
+                                            transition-all duration-300 peer-placeholder-shown:text-base 
+                                            peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 
+                                            peer-focus:-top-2.5 peer-focus:text-sm">
+                                    Email Content
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button type="submit" wire:loading.attr="disabled"
+                        class="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 
+                               text-white px-8 py-4 rounded-xl font-medium transition-all duration-500 
+                               flex items-center justify-center space-x-3 relative overflow-hidden group
+                               shadow-[0_0_30px_rgba(112,144,176,0.2)] hover:shadow-[0_0_40px_rgba(112,144,176,0.3)]">
+                        <span class="relative z-10 flex items-center gap-2 text-lg">
+                            <span wire:loading.remove>Generate Email</span>
+                            <span wire:loading>
+                                <svg class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Generated Email Preview -->
+            @if ($editableEmail)
+                <div class="bg-gray-800/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 mb-8 transform transition-all duration-300 hover:shadow-[0_0_30px_rgba(112,144,176,0.15)]">
+                    <div class="p-6 space-y-6">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between pb-4 border-b border-white/10">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-cyan-900/30 border border-cyan-400/20 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                                    Generated Email
+                                </h3>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <!-- Copy Button -->
+                                <button @click="window.navigator.clipboard.writeText($refs.emailContent.innerText)"
+                                        class="px-4 py-2 bg-gray-700/50 hover:bg-cyan-600/30 rounded-xl transition-all duration-300
+                                               flex items-center gap-2 group relative border border-white/10 hover:border-cyan-400/30">
+                                    <svg class="w-5 h-5 text-gray-400 group-hover:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-gray-300 group-hover:text-cyan-400">Copy</span>
+                                </button>
+
+                                <!-- Send Button -->
+                                <button wire:click="sendMail" wire:loading.attr="disabled"
+                                        class="px-4 py-2 bg-gray-700/50 hover:bg-purple-600/30 rounded-xl transition-all duration-300
+                                               flex items-center gap-2 group relative border border-white/10 hover:border-purple-400/30">
+                                    <svg class="w-5 h-5 text-gray-400 group-hover:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-gray-300 group-hover:text-purple-400">Send</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Email Content -->
+                        <div class="space-y-6 text-gray-300" x-ref="emailContent">
+                            <div class="text-sm space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-cyan-400 w-16">To:</span>
+                                    <span class="font-mono text-gray-300">{{ $email }}</span>
+                                </div>
+                                @if ($cc)
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-medium text-purple-400 w-16">CC:</span>
+                                        <span class="font-mono text-gray-300">{{ $cc }}</span>
+                                    </div>
+                                @endif
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-cyan-400 w-16">Subject:</span>
+                                    <span class="font-semibold text-gray-100">{{ $subject }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Email Body -->
+                            <div class="prose prose-invert max-w-none pt-4 border-t border-white/10">
+                                <div class="whitespace-pre-line leading-relaxed text-gray-300 font-light">
+                                    {{ $editableEmail }}
+                                </div>
+                            </div>
+
+                            <!-- Modification Interface -->
+                            <div class="pt-6 border-t border-white/10">
+                                <form wire:submit.prevent="modifyEmail" class="flex gap-4">
+                                    <div class="relative flex-1 group">
+                                        <div class="absolute -inset-1 bg-gradient-to-r from-cyan-600/30 to-purple-600/30 rounded-xl blur opacity-20 group-hover:opacity-30 transition-all duration-300"></div>
+                                        <input type="text" wire:model="command"
+                                            class="w-full px-5 py-3 bg-gray-900/50 border border-white/10 rounded-xl text-gray-100
+                                                   focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-500
+                                                   transition-all duration-300 relative"
+                                            placeholder="Enter modification instructions...">
+                                    </div>
+                                    <button type="submit" wire:loading.attr="disabled"
+                                        class="px-6 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 
+                                               text-white rounded-xl transition-all duration-300 flex items-center justify-center 
+                                               min-w-[140px] relative overflow-hidden group">
+                                        <span class="relative z-10 flex items-center gap-2">
+                                            <span wire:loading.remove>Apply Changes</span>
+                                            <span wire:loading>
+                                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </span>
+                                        </span>
+                                    </button>
+                                </form>
+                                <p class="text-sm text-gray-500 mt-3 ml-1">
+                                    Example: "Make it more formal", "Shorten to 3 paragraphs", "Add call-to-action"
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
